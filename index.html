@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Wedding Invitation - Hendri Budiman S.Pd & Mellysa Citra Dewi A.Md.A.B</title>
+    <!-- Google Fonts untuk tulisan utama meliuk -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS untuk Excel Parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- PDF.js untuk PDF Parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
+    
+    <!-- FIREBASE SDK UNTUK CLOUD REALTIME DATABASE -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        @keyframes spinSlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spinSlow 8s linear infinite;
+        }
+
+        .font-script {
+            font-family: 'Dancing Script', cursive;
+        }
+
+        /* EFEK SHADOW GELAP HALUS SUPAYA TEKS SANGAT JELAS DIBACA TANPA KOTAK */
+        .text-readable-shadow {
+            text-shadow: 
+                0px 2px 4px rgba(0, 0, 0, 0.95), 
+                0px 0px 10px rgba(0, 0, 0, 0.85),
+                0px 0px 20px rgba(0, 0, 0, 0.7);
+        }
+
+        /* EFEK SHADOW TERANG SUPAYA TEKS WARNA GELAP/NAVY/BURGUNDY JELAS DIBACA DI ATAS FOTO */
+        .text-light-shadow {
+            text-shadow: 
+                0px 1px 6px rgba(255, 255, 255, 0.95), 
+                0px 0px 14px rgba(255, 255, 255, 0.9),
+                0px 0px 24px rgba(255, 255, 255, 0.85);
+        }
+
+        .bg-cover-permanent {
+            background-image: url('img/cover.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .bg-top-section {
+            background-image: url('img/head.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .bg-quran-section {
+            background-image: url('img/bg2.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        
+        .bg-bunga-permanent {
+            background-image: url('img/bg.jpeg');
+            background-size: contain;
+            background-position: top center;
+            background-repeat: repeat-y;
+            background-attachment: scroll;
+        }
+
+        @media (min-width: 1024px) {
+            .bg-bunga-permanent {
+                background-size: cover;
+                background-attachment: fixed;
+            }
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px) scale(0.96);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            will-change: opacity, transform;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    </style>
+</head>
+<body class="bg-white text-[#542B3C] antialiased selection:bg-[#542B3C] selection:text-white">
+
+    <!-- ================= ADMIN DASHBOARD PAGE ================= -->
+    <div id="admin-page" class="hidden min-h-screen p-4 md:p-8 max-w-5xl mx-auto bg-slate-950 text-slate-100 rounded-3xl my-4">
+        <header class="mb-8 border-b border-slate-800 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-100 tracking-tight">Dashboard Admin Undangan</h1>
+                <p class="text-xs text-slate-400 mt-1">Hendri Budiman S.Pd & Mellysa Citra Dewi A.Md.A.B Wedding Setup</p>
+            </div>
+            <button onclick="switchToPreview()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-950 text-xs font-semibold rounded-xl transition-all shadow-lg">
+                Pratinjau Undangan Utuh &rarr;
+            </button>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Form Pengaturan Acara -->
+            <div class="md:col-span-1 bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+                <h2 class="text-sm font-semibold text-slate-100 border-b border-slate-800 pb-2">Pengaturan Acara</h2>
+                
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Nama Mempelai Pria</label>
+                    <input type="text" id="cfg-groom" value="Hendri Budiman S.Pd" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-slate-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Foto Mempelai Pria (Path/URL)</label>
+                    <input type="text" id="cfg-groom-img" value="img/hen.jpeg" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-slate-500 font-mono">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Nama Mempelai Wanita</label>
+                    <input type="text" id="cfg-bride" value="Mellysa Citra Dewi A.Md.A.B" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-slate-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Foto Mempelai Wanita (Path/URL)</label>
+                    <input type="text" id="cfg-bride-img" value="img/mel.jpeg" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-slate-500 font-mono">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Tanggal Target (Format: YYYY-MM-DDTHH:mm:ss)</label>
+                    <input type="text" id="cfg-date" value="2026-12-06T09:00:00" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-slate-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Teks Hari & Tanggal Akad</label>
+                    <input type="text" id="cfg-date-text" value="Minggu, 06 Desember 2026" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-slate-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Jam Akad</label>
+                    <input type="text" id="cfg-time" value="09.00 WIB s/d 11.00" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-slate-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Jam Resepsi</label>
+                    <input type="text" id="cfg-location" value="11.00 WIB s/d Selesai" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-slate-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Alamat Lengkap</label>
+                    <input type="text" id="cfg-address" value="Jl.Lapang Tembak Selatan Gg.Mekarsari 1 RT.04 RW.07 Kel.Padasuka Cimahi Tengah" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-slate-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Tautan Google Maps</label>
+                    <input type="text" id="cfg-maps-url" value="https://maps.app.goo.gl/zBzcymrJVno37Xz16?g_st=aw" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-slate-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Nama Bank</label>
+                    <input type="text" id="cfg-bank-name" value="BRI" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-slate-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Atas Nama Rekening</label>
+                    <input type="text" id="cfg-bank-owner" value="Hendri Budiman" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-slate-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Nomor Rekening</label>
+                    <input type="text" id="cfg-bank-number" value="366901024735505" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-slate-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Path Musik (.mp3)</label>
+                    <input type="text" id="cfg-audio-url" value="Sound/anugrah.mp3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-slate-500 font-mono">
+                </div>
+
+                <button onclick="saveSettings(true)" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-xs font-medium rounded-xl text-slate-100 transition-colors">
+                    Simpan Pengaturan
+                </button>
+            </div>
+
+            <!-- Generator Tamu & Manajemen Komentar Admin -->
+            <div class="md:col-span-2 space-y-6">
+                <!-- Generator Link -->
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-sm font-semibold text-slate-100">Daftar Tamu & Generator Link Singkat</h2>
+                        <button onclick="downloadExcelTemplate()" class="text-[11px] text-slate-300 hover:underline">Unduh Template Excel</button>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3 items-center">
+                        <label class="w-full sm:w-auto flex-1 flex items-center justify-center px-4 py-3 border border-dashed border-slate-700 hover:border-slate-500 rounded-xl cursor-pointer bg-slate-950 text-xs text-slate-400 transition-colors">
+                            <span>📂 Upload File Excel / PDF Tamu</span>
+                            <input type="file" id="file-upload" accept=".xlsx, .xls, .pdf" onchange="handleFileUpload(event)" class="hidden">
+                        </label>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">Nama Tamu (1 Nama per baris)</label>
+                        <textarea id="guest-input" rows="4" placeholder="Cth: Rendy & Nadia&#10;tulis nama tamu lainnya atau masukan excel" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-100 focus:outline-none focus:border-slate-500 font-mono"></textarea>
+                    </div>
+
+                    <button onclick="generateShortLinks()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-lg">
+                        Buat Tautan Undangan Singkat (?to=nama)
+                    </button>
+                </div>
+
+                <div id="result-box" class="hidden bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-semibold text-slate-100">Daftar Link Undangan</h3>
+                        <span id="counter-badge" class="px-2.5 py-0.5 bg-slate-800 text-slate-200 text-[10px] rounded-full font-mono">0 Tamu</span>
+                    </div>
+                    <div id="link-list-container" class="space-y-3 max-h-60 overflow-y-auto pr-1"></div>
+                </div>
+
+                <!-- ADMIN MANAJEMEN KOMENTAR & KELOLA HAPUS -->
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                        <h2 class="text-sm font-semibold text-slate-100">Kelola Komentar Tamu (Cloud Realtime Admin)</h2>
+                        <span id="admin-comment-count" class="px-2.5 py-0.5 bg-slate-800 text-slate-200 text-[10px] rounded-full font-mono">0 Komentar</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400">Semua ucapan dari berbagai link tamu di perangkat apa pun akan terhimpun secara cloud. Anda dapat menghapus ucapan di sini.</p>
+                    <div id="admin-comments-container" class="space-y-3 max-h-80 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= INVITATION PREVIEW PAGE ================= -->
+    <div id="invitation-page" class="hidden min-h-screen relative overflow-x-hidden w-full text-[#542B3C]">
+        <audio id="bg-audio" loop preload="auto"></audio>
+
+        <!-- Floating Music & Admin Switch Button -->
+        <div class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 items-end">
+            <button id="admin-back-btn" onclick="switchToAdmin()" class="hidden px-4 py-2 bg-[#542B3C]/90 backdrop-blur text-white border border-rose-200/30 rounded-full text-xs font-bold shadow-xl hover:scale-105 transition-transform">
+                ⚙️ Dashboard Admin
+            </button>
+            <button id="floating-music-btn" onclick="toggleAudio()" class="hidden w-12 h-12 bg-[#542B3C]/90 backdrop-blur text-white rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform">
+                <svg id="music-icon" class="w-5 h-5 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+            </button>
+        </div>
+
+        <!-- Cover Section (Dark Burgundy #542B3C) -->
+        <section id="cover-section" class="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-6 py-10 bg-cover-permanent">
+            <!-- Teks Langsung Tanpa Kotak -->
+            <div class="max-w-md w-full space-y-3.5 z-10 mx-auto mt-[28vh]">
+                <p class="text-[11px] uppercase tracking-[0.3em] font-extrabold text-[#542B3C] text-light-shadow">The Wedding Of</p>
+                <h1 id="view-couple-names-cover" class="text-3xl md:text-5xl font-script font-bold text-[#542B3C] leading-tight text-light-shadow">Hendri Budiman S.Pd & Mellysa Citra Dewi A.Md.A.B</h1>
+                
+                <div class="py-1 px-4 inline-block">
+                    <p class="text-[10px] text-[#542B3C] uppercase tracking-wider font-bold text-light-shadow">Kepada Yth. Bapak/Ibu/Saudara/i:</p>
+                    <p id="view-guest-name" class="text-sm md:text-base font-extrabold text-[#542B3C] mt-0.5 tracking-wide text-light-shadow">Tamu Kehormatan</p>
+                </div>
+                
+                <p class="text-[11px] text-[#542B3C] font-bold max-w-xs mx-auto leading-relaxed text-light-shadow">Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir.</p>
+                
+                <button onclick="openInvitation()" class="px-8 py-2.5 bg-[#542B3C] hover:bg-[#3f1f2d] text-white text-xs font-bold rounded-2xl shadow-2xl transition-all mt-2 border border-rose-200/30">
+                    Buka Undangan
+                </button>
+            </div>
+        </section>
+
+        <!-- Main Content Section -->
+        <div id="main-content" class="hidden min-h-screen w-full">
+            
+            <!-- Bagian Timer (Dark Burgundy #542B3C) -->
+            <section class="relative min-h-screen w-full flex flex-col items-center justify-end text-center px-6 pb-16 pt-64 bg-top-section">
+                <div class="max-w-md w-full space-y-4 z-10 mx-auto flex flex-col items-center reveal">
+                    <h2 id="view-couple-names" class="text-3xl md:text-4xl font-script font-bold text-[#542B3C] text-light-shadow leading-snug">
+                        Hendri Budiman S.Pd<br>&amp;<br>Mellysa Citra Dewi A.Md.A.B
+                    </h2>
+                    <p id="view-date-text" class="text-xs md:text-sm font-bold text-[#542B3C] text-light-shadow">Minggu, 06 Desember 2026</p>
+                    
+                    <div class="grid grid-cols-4 gap-2 pt-2 max-w-xs w-full mx-auto">
+                        <div class="bg-[#542B3C] text-white p-2.5 rounded-xl shadow-lg flex flex-col items-center justify-center">
+                            <span id="days" class="text-base md:text-lg font-bold font-mono">00</span>
+                            <span class="text-[9px] text-rose-100 font-medium">Hari</span>
+                        </div>
+                        <div class="bg-[#542B3C] text-white p-2.5 rounded-xl shadow-lg flex flex-col items-center justify-center">
+                            <span id="hours" class="text-base md:text-lg font-bold font-mono">00</span>
+                            <span class="text-[9px] text-rose-100 font-medium">Jam</span>
+                        </div>
+                        <div class="bg-[#542B3C] text-white p-2.5 rounded-xl shadow-lg flex flex-col items-center justify-center">
+                            <span id="minutes" class="text-base md:text-lg font-bold font-mono">00</span>
+                            <span class="text-[9px] text-rose-100 font-medium">Menit</span>
+                        </div>
+                        <div class="bg-[#542B3C] text-white p-2.5 rounded-xl shadow-lg flex flex-col items-center justify-center">
+                            <span id="seconds" class="text-base md:text-lg font-bold font-mono">00</span>
+                            <span class="text-[9px] text-rose-100 font-medium">Detik</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-6 py-20 bg-quran-section space-y-12">
+                <div class="max-w-lg w-full space-y-4 z-10 mx-auto p-4 reveal">
+                    <h3 class="text-3xl md:text-4xl font-script font-bold text-[#542B3C]">Ar-Rum: 21</h3>
+                    <p class="text-xs md:text-sm text-[#542B3C] font-medium leading-relaxed italic px-2">
+                        "Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepada-Nya, dan Dia menjadikan di antaramu rasa kasih dan sayang."
+                    </p>
+                </div>
+
+                <div class="max-w-2xl w-full flex flex-col sm:flex-row items-center sm:items-start justify-center gap-8 sm:gap-12 z-10 mx-auto">
+                    <!-- Mempelai Pria -->
+                    <div class="flex flex-col items-center text-center space-y-3 flex-1 reveal">
+                        <div class="w-full max-w-[200px] aspect-[3/4] overflow-hidden rounded-t-[100px] border-4 border-[#542B3C]/20 shadow-lg bg-slate-200">
+                            <img id="view-groom-img" src="img/hen.jpeg" alt="Foto Hendri Budiman S.Pd" class="w-full h-full object-cover object-top">
+                        </div>
+                        <div class="space-y-1 text-center">
+                            <h4 id="view-groom-name" class="text-2xl md:text-3xl font-script font-bold text-[#542B3C]">Hendri Budiman S.Pd</h4>
+                            <p class="text-xs text-[#542B3C] font-medium">Putra Dari Bapak Yudi &amp; Ibu Yugi</p>
+                        </div>
+                    </div>
+
+                    <div class="text-2xl font-script font-bold text-[#542B3C] sm:mt-28 reveal">&</div>
+
+                    <!-- Mempelai Wanita -->
+                    <div class="flex flex-col items-center text-center space-y-3 flex-1 reveal">
+                        <div class="w-full max-w-[200px] aspect-[3/4] overflow-hidden rounded-t-[100px] border-4 border-[#542B3C]/20 shadow-lg bg-slate-200">
+                            <img id="view-bride-img" src="img/mel.jpeg" alt="Foto Mellysa Citra Dewi A.Md.A.B" class="w-full h-full object-cover object-top">
+                        </div>
+                        <div class="space-y-1 text-center">
+                            <h4 id="view-bride-name" class="text-2xl md:text-3xl font-script font-bold text-[#542B3C]">Mellysa Citra Dewi A.Md.A.B</h4>
+                            <p class="text-xs text-[#542B3C] font-medium">Putri Dari Bapak Sudi &amp; Ibu Sugi</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="bg-bunga-permanent w-full text-[#542B3C]">
+                <!-- Waktu & Tempat -->
+                <section id="section-date-loc" class="py-16 md:py-24 px-4 md:px-6 text-center">
+                    <div class="max-w-2xl mx-auto space-y-8">
+                        <h2 class="text-3xl md:text-4xl font-script font-bold text-[#542B3C] reveal">Waktu & Tempat</h2>
+                        
+                        <div class="max-w-md mx-auto space-y-7 text-center">
+                            <!-- Akad Nikah -->
+                            <div class="space-y-2 reveal">
+                                <h3 class="text-3xl font-script font-bold text-[#542B3C]">Akad Nikah</h3>
+                                <p class="text-xs text-[#542B3C] font-bold flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4 text-[#542B3C] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    <span id="view-date">Minggu, 06 Desember 2026</span>
+                                </p>
+                                <p class="text-xs text-[#542B3C] font-bold flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4 text-[#542B3C] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span>Pukul : <span id="view-time-box">09.00 WIB s/d 11.00</span></span>
+                                </p>
+                            </div>
+
+                            <!-- Resepsi -->
+                            <div class="space-y-2 reveal">
+                                <h3 class="text-3xl font-script font-bold text-[#542B3C]">Resepsi</h3>
+                                <p class="text-xs text-[#542B3C] font-bold flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4 text-[#542B3C] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    <span>Minggu, 06 Desember 2026</span>
+                                </p>
+                                <p class="text-xs text-[#542B3C] font-bold flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4 text-[#542B3C] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span>Pukul: <span id="view-location-box">11.00 WIB s/d Selesai</span></span>
+                                </p>
+                            </div>
+
+                            <!-- Alamat -->
+                            <div class="space-y-1.5 reveal">
+                                <p class="text-xs text-[#542B3C] font-extrabold flex items-center justify-center gap-1.5">
+                                    <svg class="w-4 h-4 text-[#542B3C] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    <span>Alamat:</span>
+                                </p>
+                                <p id="view-address-box" class="text-xs text-[#542B3C] font-semibold leading-relaxed max-w-xs mx-auto">Jl.Lapang Tembak Selatan Gg.Mekarsari 1 RT.04 RW.07 Kel.Padasuka Cimahi Tengah</p>
+                            </div>
+                        </div>
+
+                        <!-- Peta Interaktif Embed -->
+                        <div class="max-w-md mx-auto space-y-3 reveal">
+                            <div class="rounded-2xl overflow-hidden shadow-lg border border-slate-300 bg-slate-200 aspect-video relative">
+                                <iframe 
+                                    id="view-maps-iframe"
+                                    src="https://maps.google.com/maps?q=Jl.%20Lapang%20Tembak%20Selatan%20Gg.%20Mekarsari%201%20Padasuka%20Cimahi%20Tengah&t=&z=15&ie=UTF8&iwloc=&output=embed" 
+                                    class="w-full h-full border-0" 
+                                    allowfullscreen="" 
+                                    loading="lazy" 
+                                    referrerpolicy="no-referrer-when-downgrade">
+                                </iframe>
+                            </div>
+                            <a id="view-maps-btn" href="https://maps.app.goo.gl/zBzcymrJVno37Xz16?g_st=aw" target="_blank" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#542B3C] hover:bg-[#3f1f2d] text-white text-xs font-bold rounded-xl shadow-md transition-all">
+                                📍 Buka di Google Maps
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- OUR LOVE STORY -->
+                <section class="py-16 md:py-24 px-4 md:px-6 max-w-xl mx-auto space-y-10">
+                    <div class="text-center space-y-2 reveal">
+                        <h2 class="text-4xl md:text-5xl font-script text-[#542B3C] font-bold">Our Love Story</h2>
+                    </div>
+
+                    <div class="relative border-l-2 border-[#542B3C]/80 ml-4 md:ml-8 space-y-12 pl-6 md:pl-8">
+                        <div class="relative space-y-2 reveal">
+                            <div class="absolute -left-[31px] md:-left-[39px] top-1 w-4 h-4 rounded-full bg-[#542B3C] border-2 border-white shadow"></div>
+                            <h3 class="text-2xl font-script font-bold text-[#542B3C]">Awal Kisah</h3>
+                            <p class="text-xs text-[#542B3C] font-semibold leading-relaxed">
+                                Pada awalnya, kami adalah dua orang asing yang berjalan di jalannya masing-masing. Tak saling kenal, tak saling sapa. Hingga semesta dengan caranya yang indah, mempertemukan kami di satu titik yang sama.
+                            </p>
+                        </div>
+                        <div class="relative space-y-2 reveal">
+                            <div class="absolute -left-[31px] md:-left-[39px] top-1 w-4 h-4 rounded-full bg-[#542B3C] border-2 border-white shadow"></div>
+                            <h3 class="text-2xl font-script font-bold text-[#542B3C]">Tumbuh Bersama</h3>
+                            <p class="text-xs text-[#542B3C] font-semibold leading-relaxed">
+                                Percakapan sederhana menjadi tawa yang panjang. Tawa yang panjang menjadi nyaman yang menetap. Dan nyaman itu pelan-pelan berubah menjadi cinta yang tak kami rencanakan.
+                            </p>
+                        </div>
+                        <div class="relative space-y-2 reveal">
+                            <div class="absolute -left-[31px] md:-left-[39px] top-1 w-4 h-4 rounded-full bg-[#542B3C] border-2 border-white shadow"></div>
+                            <h3 class="text-2xl font-script font-bold text-[#542B3C]">Janji Setia</h3>
+                            <p class="text-xs text-[#542B3C] font-semibold leading-relaxed">
+                                Dan kini, setelah melalui waktu, doa, dan restu, kami yakin bahwa pertemuan ini bukan kebetulan. Ini adalah jawaban dari doa-doa yang kami langitkan diam-diam.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Our Gallery's -->
+                <section id="section-gallery" class="py-16 md:py-24 px-4 md:px-6 max-w-2xl mx-auto space-y-8">
+                    <div class="text-center space-y-2 reveal">
+                        <h2 class="text-4xl md:text-5xl font-script text-[#542B3C] font-bold">Our Gallery's</h2>
+                        <p class="text-xs text-[#542B3C] font-semibold">Momen bahagia yang kami abadikan menuju hari istimewa.</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="aspect-[3/4] overflow-hidden rounded-2xl shadow-md border-2 border-white bg-slate-200 reveal">
+                            <img src="img/g3.jpeg" alt="Galeri 1" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                        </div>
+                        <div class="aspect-[3/4] overflow-hidden rounded-2xl shadow-md border-2 border-white bg-slate-200 reveal">
+                            <img src="img/g4.jpeg" alt="Galeri 2" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                        </div>
+                        <div class="aspect-[3/4] overflow-hidden rounded-2xl shadow-md border-2 border-white bg-slate-200 reveal">
+                            <img src="img/g1.jpeg" alt="Galeri 3" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                        </div>
+                        <div class="aspect-[3/4] overflow-hidden rounded-2xl shadow-md border-2 border-white bg-slate-200 reveal">
+                            <img src="img/g2.jpeg" alt="Galeri 4" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Ucapan & Doa -->
+                <section class="py-16 md:py-24 px-4 md:px-6 max-w-2xl mx-auto space-y-8">
+                    <div class="text-center space-y-2 reveal">
+                        <h2 class="text-3xl md:text-4xl font-script font-bold text-[#542B3C]">Ucapan & Doa Restu</h2>
+                        <p class="text-xs text-[#542B3C] font-semibold">Berikan ucapan, doa, dan konfirmasi kehadiran untuk kedua mempelai.</p>
+                    </div>
+
+                    <div class="space-y-4 reveal bg-white/80 p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <div>
+                            <label class="block text-xs font-bold text-[#542B3C] mb-1">Nama Tamu</label>
+                            <input type="text" id="comment-name" placeholder="Nama Anda" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-[#542B3C] font-semibold placeholder:text-[#542B3C]/50 focus:outline-none focus:border-[#542B3C]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-[#542B3C] mb-1">Konfirmasi Kehadiran</label>
+                            <select id="comment-attendance" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-[#542B3C] font-semibold focus:outline-none focus:border-[#542B3C]">
+                                <option value="Hadir">Hadir</option>
+                                <option value="Tidak Hadir">Tidak Hadir</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-[#542B3C] mb-1">Ucapan & Doa</label>
+                            <textarea id="comment-text" rows="3" placeholder="Tulis ucapan dan doa restu di sini..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs text-[#542B3C] font-semibold placeholder:text-[#542B3C]/50 focus:outline-none focus:border-[#542B3C]"></textarea>
+                        </div>
+                        <button onclick="submitComment()" class="w-full py-3 bg-[#542B3C] hover:bg-[#3f1f2d] text-white font-bold text-xs rounded-xl transition-all shadow-md">
+                            Kirim Ucapan
+                        </button>
+                    </div>
+
+                    <div class="space-y-4 pt-6 reveal">
+                        <h3 class="text-sm font-bold text-[#542B3C]">Daftar Ucapan Tamu (<span id="comment-count">0</span>)</h3>
+                        <div id="comments-container" class="space-y-4 max-h-[500px] overflow-y-auto pr-1"></div>
+                        <div id="see-more-container" class="text-center pt-2 hidden">
+                            <button onclick="toggleSeeMoreComments()" id="see-more-btn" class="px-5 py-2 bg-[#542B3C] hover:bg-[#3f1f2d] text-xs font-bold text-white rounded-xl transition-colors">
+                                Show More
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Wedding Gift -->
+                <section class="py-16 md:py-24 px-4 md:px-6 max-w-4xl mx-auto space-y-12">
+                    <div class="p-6 text-center max-w-md mx-auto space-y-5 reveal">
+                        <h3 class="text-3xl font-script font-bold text-[#542B3C]">Wedding Gift</h3>
+                        <p class="text-xs text-[#542B3C] font-semibold leading-relaxed">
+                            Doa restu Anda merupakan karunia terindah bagi kami. Namun jika ingin mengirimkan tanda kasih:
+                        </p>
+                        
+                        <div class="p-4 bg-white/90 border border-slate-300 rounded-2xl shadow-sm space-y-2 text-center reveal">
+                            <p id="view-bank-name" class="text-base font-extrabold text-[#542B3C] tracking-wider">BRI</p>
+                            <p id="view-bank-number" class="text-lg font-mono font-extrabold text-[#542B3C] tracking-widest">366901024735505</p>
+                            <p id="view-bank-owner" class="text-xs font-bold text-[#542B3C]">Hendri Budiman</p>
+                            <button onclick="copyRekById('view-bank-number', this)" class="mt-2 px-6 py-2 bg-[#542B3C] hover:bg-[#3f1f2d] text-xs rounded-xl font-bold text-white transition-colors shadow-md">
+                                Salin Rekening
+                            </button>
+                        </div>
+
+                        <div class="p-4 bg-white/90 border border-slate-300 rounded-2xl shadow-sm space-y-2 text-center reveal">
+                            <p class="text-base font-extrabold text-[#542B3C] tracking-wider">BRI</p>
+                            <p id="view-bank-number-2" class="text-lg font-mono font-extrabold text-[#542B3C] tracking-widest">000501163347509</p>
+                            <p class="text-xs font-bold text-[#542B3C]">Mellysa Citra Dewi</p>
+                            <button onclick="copyRekById('view-bank-number-2', this)" class="mt-2 px-6 py-2 bg-[#542B3C] hover:bg-[#3f1f2d] text-xs rounded-xl font-bold text-white transition-colors shadow-md">
+                                Salin Rekening
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <script>
+        // KODE FIREBASE CONFIG MILIKMU (TERINTEGRASI FULL)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDslYKaLB0k9SdXV_w-cA7x7vp14TUUIss",
+            authDomain: "undangan-digital-61975.firebaseapp.com",
+            databaseURL: "https://undangan-digital-61975-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "undangan-digital-61975",
+            storageBucket: "undangan-digital-61975.firebasestorage.app",
+            messagingSenderId: "101954561332",
+            appId: "1:101954561332:web:9030717a4c7ee36c293161"
+        };
+
+        let db = null;
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            db = firebase.database();
+        } catch (e) {
+            console.error("Firebase Init Error:", e);
+        }
+
+        const DEFAULT_AUDIO_SRC = 'Sound/anugrah.mp3';
+        const DEFAULT_GROOM_IMG = 'img/hen.jpeg';
+        const DEFAULT_BRIDE_IMG = 'img/mel.jpeg';
+        const DEFAULT_TARGET_DATE = '2026-12-06T09:00:00';
+        const DEFAULT_DATE_TEXT = 'Minggu, 06 Desember 2026';
+        const DEFAULT_MAPS_URL = 'https://maps.app.goo.gl/zBzcymrJVno37Xz16?g_st=aw';
+
+        let showAllComments = false;
+        let countdownTimerInterval = null;
+        let isPlaying = false;
+        let commentsList = [];
+
+        function initScrollReveal() {
+            const reveals = document.querySelectorAll('.reveal');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                    }
+                });
+            }, {
+                threshold: 0.12,
+                rootMargin: "0px 0px -30px 0px"
+            });
+
+            reveals.forEach(el => observer.observe(el));
+        }
+
+        // MENGATASI GLITCH: PERIKSA PARAMETER URL SEBELUM KONTEN TAMPIL
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = JSON.parse(localStorage.getItem('wedding_config')) || {};
+            if (!saved.date || !saved.date.includes('2026-12-06')) {
+                saved.date = DEFAULT_TARGET_DATE;
+                saved.dateText = DEFAULT_DATE_TEXT;
+            }
+            saved.audioUrl = DEFAULT_AUDIO_SRC;
+            saved.groomImg = DEFAULT_GROOM_IMG;
+            saved.brideImg = DEFAULT_BRIDE_IMG;
+            saved.groom = "Hendri Budiman S.Pd";
+            saved.bride = "Mellysa Citra Dewi A.Md.A.B";
+            saved.time = "09.00 WIB s/d 11.00";
+            saved.location = "11.00 WIB s/d Selesai";
+            saved.address = "Jl.Lapang Tembak Selatan Gg.Mekarsari 1 RT.04 RW.07 Kel.Padasuka Cimahi Tengah";
+            saved.bankName = "BRI";
+            saved.bankOwner = "Hendri Budiman";
+            saved.bankNumber = "366901024735505";
+            saved.mapsUrl = DEFAULT_MAPS_URL;
+
+            localStorage.setItem('wedding_config', JSON.stringify(saved));
+
+            loadSavedSettingsToForm();
+            parseUrlParameters();
+            listenCloudComments();
+            startCountdown();
+        });
+
+        // MENDENGARKAN DAN MENYEBARKAN KOMENTAR SECARA CLOUD REALTIME LINTAS PERANGKAT
+        function listenCloudComments() {
+            if (db) {
+                db.ref('comments').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    commentsList = [];
+                    if (data) {
+                        Object.keys(data).forEach(key => {
+                            let item = data[key];
+                            item.firebaseKey = key;
+                            commentsList.unshift(item);
+                        });
+                    }
+                    renderComments();
+                    renderAdminComments();
+                });
+            }
+        }
+
+        function startCountdown() {
+            if (countdownTimerInterval) clearInterval(countdownTimerInterval);
+
+            const updateTimer = () => {
+                const saved = JSON.parse(localStorage.getItem('wedding_config')) || {};
+                const targetDateStr = saved.date || DEFAULT_TARGET_DATE;
+                
+                const targetTime = new Date(targetDateStr.replace(/-/g, '/')).getTime() || new Date(targetDateStr).getTime();
+                const now = new Date().getTime();
+                const difference = targetTime - now;
+
+                if (difference > 0) {
+                    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+                    document.getElementById('days').innerText = String(days).padStart(2, '0');
+                    document.getElementById('hours').innerText = String(hours).padStart(2, '0');
+                    document.getElementById('minutes').innerText = String(minutes).padStart(2, '0');
+                    document.getElementById('seconds').innerText = String(seconds).padStart(2, '0');
+                } else {
+                    document.getElementById('days').innerText = "00";
+                    document.getElementById('hours').innerText = "00";
+                    document.getElementById('minutes').innerText = "00";
+                    document.getElementById('seconds').innerText = "00";
+                }
+            };
+
+            updateTimer();
+            countdownTimerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function parseUrlParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const toName = urlParams.get('to');
+
+            const saved = JSON.parse(localStorage.getItem('wedding_config')) || {};
+            applyConfigToView(saved);
+
+            const audioEl = document.getElementById('bg-audio');
+            audioEl.src = saved.audioUrl || DEFAULT_AUDIO_SRC;
+            audioEl.load();
+
+            if (toName) {
+                document.getElementById('admin-page').classList.add('hidden');
+                document.getElementById('admin-back-btn').classList.add('hidden');
+                document.getElementById('invitation-page').classList.remove('hidden');
+                
+                const decodedName = decodeURIComponent(toName.replace(/_/g, ' '));
+                document.getElementById('view-guest-name').innerText = decodedName;
+                document.getElementById('comment-name').value = decodedName;
+                initScrollReveal();
+            } else {
+                document.getElementById('admin-page').classList.remove('hidden');
+                document.getElementById('invitation-page').classList.add('hidden');
+            }
+        }
+
+        function applyConfigToView(saved) {
+            const groom = saved.groom || "Hendri Budiman S.Pd";
+            const bride = saved.bride || "Mellysa Citra Dewi A.Md.A.B";
+            const coupleText = `${groom} & ${bride}`;
+
+            document.getElementById('view-couple-names-cover').innerText = coupleText;
+            document.getElementById('view-couple-names').innerHTML = `${escapeHtml(groom)}<br>&amp;<br>${escapeHtml(bride)}`;
+            document.getElementById('view-groom-name').innerText = groom;
+            document.getElementById('view-bride-name').innerText = bride;
+            
+            document.getElementById('view-groom-img').src = saved.groomImg || DEFAULT_GROOM_IMG;
+            document.getElementById('view-bride-img').src = saved.brideImg || DEFAULT_BRIDE_IMG;
+
+            const dateText = saved.dateText || DEFAULT_DATE_TEXT;
+            document.getElementById('view-date-text').innerText = dateText;
+            document.getElementById('view-date').innerText = dateText;
+
+            document.getElementById('view-time-box').innerText = saved.time || "09.00 WIB s/d 11.00";
+            if (saved.location) document.getElementById('view-location-box').innerText = saved.location;
+            if (saved.address) document.getElementById('view-address-box').innerText = saved.address;
+            
+            const mapsUrl = saved.mapsUrl || DEFAULT_MAPS_URL;
+            document.getElementById('view-maps-btn').href = mapsUrl;
+            
+            if (saved.bankName) document.getElementById('view-bank-name').innerText = saved.bankName;
+            if (saved.bankOwner) document.getElementById('view-bank-owner').innerText = saved.bankOwner;
+            document.getElementById('view-bank-number').innerText = saved.bankNumber || "366901024735505";
+
+            startCountdown();
+        }
+
+        function openInvitation() {
+            const cover = document.getElementById('cover-section');
+            const main = document.getElementById('main-content');
+            const audio = document.getElementById('bg-audio');
+            const floatingBtn = document.getElementById('floating-music-btn');
+            const icon = document.getElementById('music-icon');
+
+            audio.play().then(() => {
+                isPlaying = true;
+                icon.classList.add('animate-spin-slow');
+            }).catch((err) => {
+                console.log("Autoplay diblokir:", err);
+                isPlaying = false;
+                icon.classList.remove('animate-spin-slow');
+            });
+            
+            floatingBtn.classList.remove('hidden');
+
+            cover.classList.add('opacity-0', 'transition-opacity', 'duration-700');
+            setTimeout(() => {
+                cover.style.display = 'none';
+                main.classList.remove('hidden');
+                window.scrollTo(0, 0);
+                initScrollReveal();
+            }, 700);
+        }
+
+        function toggleAudio() {
+            const audio = document.getElementById('bg-audio');
+            const icon = document.getElementById('music-icon');
+            if (isPlaying) {
+                audio.pause();
+                icon.classList.remove('animate-spin-slow');
+            } else {
+                audio.play();
+                icon.classList.add('animate-spin-slow');
+            }
+            isPlaying = !isPlaying;
+        }
+
+        function generateShortLinks() {
+            saveSettings(false);
+            const input = document.getElementById('guest-input').value.trim();
+            if (!input) return alert('Masukkan minimal satu nama tamu!');
+
+            const guests = input.split('\n');
+            const baseUrl = window.location.origin + window.location.pathname;
+            const container = document.getElementById('link-list-container');
+            container.innerHTML = '';
+            let count = 0;
+
+            guests.forEach(name => {
+                const clean = name.trim();
+                if (!clean) return;
+                count++;
+                
+                const link = `${baseUrl}?to=${encodeURIComponent(clean.replace(/ /g, '_'))}`;
+
+                container.innerHTML += `
+                    <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between gap-2">
+                        <div class="overflow-hidden">
+                            <p class="text-xs font-semibold text-slate-100">${count}. ${clean}</p>
+                            <p class="text-[10px] text-slate-400 truncate font-mono">${link}</p>
+                        </div>
+                        <button onclick="navigator.clipboard.writeText('${link}'); alert('Link tersalin!');" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-[10px] rounded-lg text-slate-100 whitespace-nowrap">Salin</button>
+                    </div>
+                `;
+            });
+
+            document.getElementById('counter-badge').innerText = `${count} Tamu`;
+            document.getElementById('result-box').classList.remove('hidden');
+        }
+
+        // MENGIRIM KOMENTAR KE CLOUD REALTIME DATABASE
+        function submitComment() {
+            const name = document.getElementById('comment-name').value.trim();
+            const attendance = document.getElementById('comment-attendance').value;
+            const text = document.getElementById('comment-text').value.trim();
+
+            if (!name) return alert('Mohon masukkan nama Anda!');
+            if (!text) return alert('Mohon tuliskan ucapan atau doa restu!');
+
+            const newComment = {
+                name: name,
+                attendance: attendance,
+                text: text,
+                date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+            };
+
+            if (db) {
+                db.ref('comments').push(newComment).then(() => {
+                    document.getElementById('comment-text').value = '';
+                    alert('Ucapan & doa berhasil dikirim!');
+                }).catch(err => {
+                    alert('Gagal mengirim ucapan: ' + err.message);
+                });
+            } else {
+                alert('Koneksi ke database belum terhubung.');
+            }
+        }
+
+        function renderComments() {
+            const container = document.getElementById('comments-container');
+            const countBadge = document.getElementById('comment-count');
+            const seeMoreContainer = document.getElementById('see-more-container');
+            const seeMoreBtn = document.getElementById('see-more-btn');
+
+            if (!container) return;
+            countBadge.innerText = commentsList.length;
+
+            if (commentsList.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs text-[#542B3C] font-semibold py-4">Belum ada ucapan. Jadilah yang pertama memberikan ucapan!</p>`;
+                seeMoreContainer.classList.add('hidden');
+                return;
+            }
+
+            const limit = showAllComments ? commentsList.length : 5;
+            const displayedComments = commentsList.slice(0, limit);
+
+            container.innerHTML = displayedComments.map(c => {
+                let badgeColor = "bg-emerald-100 text-emerald-900 border border-emerald-400";
+                if (c.attendance === "Tidak Hadir") badgeColor = "bg-rose-100 text-rose-900 border border-rose-400";
+
+                return `
+                    <div class="pb-3 border-b border-slate-300 space-y-1 transition-all duration-300">
+                        <div class="flex justify-between items-center gap-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-extrabold text-[#542B3C]">${escapeHtml(c.name)}</span>
+                                <span class="px-2 py-0.5 text-[9px] font-bold rounded-full ${badgeColor}">${escapeHtml(c.attendance)}</span>
+                            </div>
+                            <span class="text-[10px] text-[#542B3C]/80 font-semibold">${escapeHtml(c.date)}</span>
+                        </div>
+                        <p class="text-xs text-[#542B3C] font-semibold leading-relaxed">${escapeHtml(c.text)}</p>
+                    </div>
+                `;
+            }).join('');
+
+            if (commentsList.length > 5) {
+                seeMoreContainer.classList.remove('hidden');
+                seeMoreBtn.innerText = showAllComments ? "Show Less" : `Show More (${commentsList.length - 5} lainnya)`;
+            } else {
+                seeMoreContainer.classList.add('hidden');
+            }
+        }
+
+        function renderAdminComments() {
+            const container = document.getElementById('admin-comments-container');
+            const countBadge = document.getElementById('admin-comment-count');
+
+            if (!container) return;
+            countBadge.innerText = `${commentsList.length} Komentar`;
+
+            if (commentsList.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs text-slate-500 py-4">Belum ada ucapan masuk dari tamu.</p>`;
+                return;
+            }
+
+            container.innerHTML = commentsList.map(c => {
+                let badgeColor = "bg-emerald-950 text-emerald-300 border border-emerald-800";
+                if (c.attendance === "Tidak Hadir") badgeColor = "bg-rose-950 text-rose-300 border border-rose-800";
+
+                return `
+                    <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-start justify-between gap-3">
+                        <div class="space-y-1 overflow-hidden">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-slate-100">${escapeHtml(c.name)}</span>
+                                <span class="px-2 py-0.5 text-[9px] font-bold rounded-full ${badgeColor}">${escapeHtml(c.attendance)}</span>
+                                <span class="text-[10px] text-slate-500">${escapeHtml(c.date)}</span>
+                            </div>
+                            <p class="text-xs text-slate-300 font-sans">${escapeHtml(c.text)}</p>
+                        </div>
+                        <button onclick="deleteCloudComment('${c.firebaseKey}')" title="Hapus Komentar Ini" class="px-2.5 py-1.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-200 text-[10px] font-bold rounded-lg transition-colors whitespace-nowrap">
+                            🗑️ Hapus
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function deleteCloudComment(firebaseKey) {
+            if (!confirm('Apakah Anda yakin ingin menghapus ucapan ini secara permanen dari semua perangkat?')) return;
+
+            if (db) {
+                db.ref('comments').child(firebaseKey).remove().then(() => {
+                    alert('Komentar berhasil dihapus!');
+                }).catch(err => {
+                    alert('Gagal menghapus komentar: ' + err.message);
+                });
+            }
+        }
+
+        function toggleSeeMoreComments() {
+            showAllComments = !showAllComments;
+            renderComments();
+        }
+
+        function escapeHtml(string) {
+            return String(string).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function downloadExcelTemplate() {
+            const templateData = [{ "Nama Tamu": "Rendy & Nadia" }, { "Nama Tamu": "Budi Santoso" }];
+            const worksheet = XLSX.utils.json_to_sheet(templateData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Daftar Tamu");
+            XLSX.writeFile(workbook, "Template_Nama_Tamu.xlsx");
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const ext = file.name.split('.').pop().toLowerCase();
+            const textarea = document.getElementById('guest-input');
+
+            if (ext === 'xlsx' || ext === 'xls') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+                    let names = [];
+                    json.forEach(row => { if (row[0] && row[0].toString().trim() !== "") names.push(row[0].toString().trim()); });
+                    textarea.value = names.join('\n');
+                    alert(`Berhasil memuat ${names.length} nama dari Excel!`);
+                };
+                reader.readAsArrayBuffer(file);
+            } else if (ext === 'pdf') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    pdfjsLib.getDocument(new Uint8Array(e.target.result)).promise.then(async function(pdf) {
+                        let names = [];
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const text = await page.getTextContent();
+                            text.items.forEach(item => { if (item.str.trim().length > 2) names.push(item.str.trim()); });
+                        }
+                        textarea.value = names.join('\n');
+                        alert(`Berhasil mengekstrak teks dari PDF!`);
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        function saveSettings(showAlert = true) {
+            const existing = JSON.parse(localStorage.getItem('wedding_config')) || {};
+            existing.groom = document.getElementById('cfg-groom').value;
+            existing.groomImg = document.getElementById('cfg-groom-img').value;
+            existing.bride = document.getElementById('cfg-bride').value;
+            existing.brideImg = document.getElementById('cfg-bride-img').value;
+            existing.date = document.getElementById('cfg-date').value;
+            existing.dateText = document.getElementById('cfg-date-text').value;
+            existing.time = document.getElementById('cfg-time').value;
+            existing.location = document.getElementById('cfg-location').value;
+            existing.address = document.getElementById('cfg-address').value;
+            existing.mapsUrl = document.getElementById('cfg-maps-url').value;
+            existing.bankName = document.getElementById('cfg-bank-name').value;
+            existing.bankOwner = document.getElementById('cfg-bank-owner').value;
+            existing.bankNumber = document.getElementById('cfg-bank-number').value;
+            existing.audioUrl = document.getElementById('cfg-audio-url').value;
+
+            localStorage.setItem('wedding_config', JSON.stringify(existing));
+            startCountdown();
+            if (showAlert) alert('Pengaturan berhasil disimpan!');
+        }
+
+        function loadSavedSettingsToForm() {
+            const saved = JSON.parse(localStorage.getItem('wedding_config'));
+            if (!saved) return;
+            if (saved.groom) document.getElementById('cfg-groom').value = saved.groom;
+            if (saved.groomImg) document.getElementById('cfg-groom-img').value = saved.groomImg;
+            if (saved.bride) document.getElementById('cfg-bride').value = saved.bride;
+            if (saved.brideImg) document.getElementById('cfg-bride-img').value = saved.brideImg;
+            if (saved.date) document.getElementById('cfg-date').value = saved.date;
+            if (saved.dateText) document.getElementById('cfg-date-text').value = saved.dateText;
+            if (saved.time) document.getElementById('cfg-time').value = saved.time;
+            if (saved.location) document.getElementById('cfg-location').value = saved.location;
+            if (saved.address) document.getElementById('cfg-address').value = saved.address;
+            if (saved.mapsUrl) document.getElementById('cfg-maps-url').value = saved.mapsUrl;
+            if (saved.bankName) document.getElementById('cfg-bank-name').value = saved.bankName;
+            if (saved.bankOwner) document.getElementById('cfg-bank-owner').value = saved.bankOwner;
+            if (saved.bankNumber) document.getElementById('cfg-bank-number').value = saved.bankNumber;
+            if (saved.audioUrl) document.getElementById('cfg-audio-url').value = saved.audioUrl;
+        }
+
+        function switchToPreview() {
+            saveSettings(false);
+            document.getElementById('admin-page').classList.add('hidden');
+            document.getElementById('invitation-page').classList.remove('hidden');
+            document.getElementById('admin-back-btn').classList.remove('hidden');
+            
+            const saved = JSON.parse(localStorage.getItem('wedding_config')) || {};
+            applyConfigToView(saved);
+            initScrollReveal();
+        }
+
+        function switchToAdmin() {
+            document.getElementById('admin-page').classList.remove('hidden');
+            document.getElementById('invitation-page').classList.add('hidden');
+            renderAdminComments();
+        }
+
+        function copyRek(btn) {
+            copyRekById('view-bank-number', btn);
+        }
+
+        function copyRekById(elementId, btn) {
+            const accountNumber = document.getElementById(elementId).innerText.trim();
+            navigator.clipboard.writeText(accountNumber);
+            const orig = btn.innerText;
+            btn.innerText = "Tersalin!";
+            setTimeout(() => { btn.innerText = orig; }, 2000);
+        }
+    </script>
+</body>
+</html>
