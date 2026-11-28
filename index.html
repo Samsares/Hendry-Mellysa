@@ -4,23 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Wedding Invitation - Hendri Budiman S.Pd & Mellysa Citra Dewi A.Md.A.B</title>
+    <!-- Preload gambar cover agar langsung tampil -->
+    <link rel="preload" as="image" href="img/cover.jpeg">
     <!-- Google Fonts untuk tulisan utama meliuk -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS untuk Excel Parsing -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- PDF.js untuk PDF Parsing -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-    </script>
     
-    <!-- FIREBASE SDK UNTUK CLOUD REALTIME DATABASE -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <!-- FIREBASE SDK UNTUK CLOUD REALTIME DATABASE (DEFER AGAR TIDAK MEMBLOKIR TAMPILAN) -->
+    <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
         @keyframes spinSlow {
@@ -231,7 +226,7 @@
 
     <!-- ================= INVITATION PREVIEW PAGE ================= -->
     <div id="invitation-page" class="hidden min-h-screen relative overflow-x-hidden w-full text-[#542B3C]">
-        <audio id="bg-audio" loop preload="auto"></audio>
+        <audio id="bg-audio" loop preload="none"></audio>
 
         <!-- Floating Music & Admin Switch Button -->
         <div class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 items-end">
@@ -309,7 +304,7 @@
                     <!-- Mempelai Pria -->
                     <div class="flex flex-col items-center text-center space-y-2.5 sm:space-y-3 flex-1 min-w-0 reveal">
                         <div class="w-full max-w-[140px] sm:max-w-[200px] aspect-[3/4] overflow-hidden rounded-t-[100px] border-4 border-[#542B3C]/20 shadow-lg bg-slate-200">
-                            <img id="view-groom-img" src="img/hen.jpeg" alt="Foto Hendri Budiman S.Pd" class="w-full h-full object-cover object-top">
+                            <img id="view-groom-img" src="img/hen.jpeg" loading="lazy" alt="Foto Hendri Budiman S.Pd" class="w-full h-full object-cover object-top">
                         </div>
                         <div class="space-y-1 text-center w-full">
                             <h4 id="view-groom-name" class="text-[clamp(0.9rem,3.4vw,1.875rem)] whitespace-nowrap font-script font-bold text-[#542B3C]">Hendri Budiman S.Pd</h4>
@@ -325,7 +320,7 @@
                     <!-- Mempelai Wanita -->
                     <div class="flex flex-col items-center text-center space-y-2.5 sm:space-y-3 flex-1 min-w-0 reveal">
                         <div class="w-full max-w-[140px] sm:max-w-[200px] aspect-[3/4] overflow-hidden rounded-t-[100px] border-4 border-[#542B3C]/20 shadow-lg bg-slate-200">
-                            <img id="view-bride-img" src="img/mel.jpeg" alt="Foto Mellysa Citra Dewi A.Md.A.B" class="w-full h-full object-cover object-top">
+                            <img id="view-bride-img" src="img/mel.jpeg" loading="lazy" alt="Foto Mellysa Citra Dewi A.Md.A.B" class="w-full h-full object-cover object-top">
                         </div>
                         <div class="space-y-1 text-center w-full">
                             <h4 id="view-bride-name" class="text-[clamp(0.9rem,3.4vw,1.875rem)] whitespace-nowrap font-script font-bold text-[#542B3C]">Mellysa Citra Dewi A.Md.A.B</h4>
@@ -440,16 +435,16 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <div class="aspect-[3/4] overflow-hidden rounded-2xl shadow-md border-2 border-white bg-slate-200 reveal">
-                            <img src="img/g3.jpeg" alt="Galeri 1" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                            <img src="img/g3.jpeg" loading="lazy" alt="Galeri 1" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
                         </div>
                         <div class="aspect-[3/4] overflow-hidden rounded-2xl shadow-md border-2 border-white bg-slate-200 reveal">
-                            <img src="img/g4.jpeg" alt="Galeri 2" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                            <img src="img/g4.jpeg" loading="lazy" alt="Galeri 2" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
                         </div>
                         <div class="aspect-[3/4] overflow-hidden rounded-2xl shadow-md border-2 border-white bg-slate-200 reveal">
-                            <img src="img/g1.jpeg" alt="Galeri 3" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                            <img src="img/g1.jpeg" loading="lazy" alt="Galeri 3" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
                         </div>
                         <div class="aspect-[3/4] overflow-hidden rounded-2xl shadow-md border-2 border-white bg-slate-200 reveal">
-                            <img src="img/g2.jpeg" alt="Galeri 4" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                            <img src="img/g2.jpeg" loading="lazy" alt="Galeri 4" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
                         </div>
                     </div>
                 </section>
@@ -539,13 +534,33 @@
         };
 
         let db = null;
-        try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
+
+        function initFirebase() {
+            if (typeof firebase === 'undefined') return;
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.database();
+            } catch (e) {
+                console.error("Firebase Init Error:", e);
             }
-            db = firebase.database();
-        } catch (e) {
-            console.error("Firebase Init Error:", e);
+        }
+
+        function loadAdminScripts() {
+            if (typeof XLSX === 'undefined') {
+                const xlsxScript = document.createElement('script');
+                xlsxScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+                document.head.appendChild(xlsxScript);
+            }
+            if (typeof pdfjsLib === 'undefined') {
+                const pdfScript = document.createElement('script');
+                pdfScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+                pdfScript.onload = () => {
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+                };
+                document.head.appendChild(pdfScript);
+            }
         }
 
         const DEFAULT_AUDIO_SRC = 'Sound/anugrah.mp3';
@@ -578,6 +593,8 @@
 
         // MENGATASI GLITCH: PERIKSA PARAMETER URL SEBELUM KONTEN TAMPIL
         window.addEventListener('DOMContentLoaded', () => {
+            initFirebase();
+
             const saved = JSON.parse(localStorage.getItem('wedding_config')) || {};
             if (!saved.date || !saved.date.includes('2026-12-06')) {
                 saved.date = DEFAULT_TARGET_DATE;
@@ -665,7 +682,6 @@
 
             const audioEl = document.getElementById('bg-audio');
             audioEl.src = saved.audioUrl || DEFAULT_AUDIO_SRC;
-            audioEl.load();
 
             if (toName) {
                 document.getElementById('admin-page').classList.add('hidden');
@@ -677,6 +693,7 @@
                 document.getElementById('comment-name').value = decodedName;
                 initScrollReveal();
             } else {
+                loadAdminScripts();
                 document.getElementById('admin-page').classList.remove('hidden');
                 document.getElementById('invitation-page').classList.add('hidden');
             }
@@ -732,13 +749,13 @@
             
             floatingBtn.classList.remove('hidden');
 
-            cover.classList.add('opacity-0', 'transition-opacity', 'duration-700');
+            cover.classList.add('opacity-0', 'transition-opacity', 'duration-300');
             setTimeout(() => {
                 cover.style.display = 'none';
                 main.classList.remove('hidden');
                 window.scrollTo(0, 0);
                 initScrollReveal();
-            }, 700);
+            }, 300);
         }
 
         function toggleAudio() {
